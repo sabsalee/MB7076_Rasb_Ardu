@@ -15,8 +15,8 @@ class Arduino():
         self.read_datetime = None
 
         self.sensor_data: bytes = b'0'
-        self.port = serial.Serial('/dev/cu.usbmodem1401', 57600) # for DEV
-        # self.port = serial.Serial("/dev/ttyACM0", 57600)
+        # self.port = serial.Serial('/dev/cu.usbmodem1401', 57600) # for DEV
+        self.port = serial.Serial("/dev/ttyACM0", 57600)
 
     def read_data(self):
         try:
