@@ -23,8 +23,8 @@ class Arduino():
             self.sensor_data = self.port.readline().strip()
             self.read_datetime = datetime.now()
             self.logger.info(f'Data Successfully Transmit - {self.sensor_data.decode()}cm')
-        except:
-            self.logger.critical('Reading Sensor Data from Arduino Failed.')
+        except Exception as e:
+            self.logger.critical(f'Reading Sensor Data from Arduino Failed. -> {e}')
 
     def save_local(self):
         try:
@@ -32,8 +32,8 @@ class Arduino():
                 __write_data = f"{self.read_datetime.strftime('%Y-%m-%d %H:%M:%S')} {self.sensor_data.decode()}cm\n"
                 f.write(__write_data)
             self.logger.info('Data Saved in Local')
-        except:
-            self.logger.critical('Writing Local Data Failed')
+        except Exception as e:
+            self.logger.critical(f'Writing Local Data Failed -> {e}')
 
     def upload_thingspeak(self):
         logger = self.logger
@@ -55,12 +55,12 @@ class Arduino():
                 self.logger.info('Sending - {!r}'.format(req))
                 sock.sendall(req)
                 self.logger.info('Sending Completed')
-                res = sock.recv(2048)
-                self.logger.info('Received {!r}'.format(res))
+                # res = sock.recv(2048)
+                # self.logger.info('Received {!r}'.format(res))
             except Exception as e:
                 logger.critical(f'Sending Data to Thingspeak Failed. -> {e}')
             finally:
                 self.logger.info('Closing socket.')
                 sock.close()
-        except:
-            logger.critical('Creating Socket Failed.')
+        except Exception as e:
+            logger.critical(f'Creating Socket Failed. -> {e}')
