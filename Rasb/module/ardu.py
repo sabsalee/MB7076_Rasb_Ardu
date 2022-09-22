@@ -1,8 +1,8 @@
-from random import randint
 from datetime import datetime
 import logging
 import serial
 import socket
+import requests
 
 class Arduino():
     def __init__(self, logger: logging.Logger) -> None:
@@ -49,14 +49,14 @@ class Arduino():
                 req = b'GET /update'
                 req += b"?api_key=" + self.API_KEY + b"&" + self.FIELD + b"=" + self.sensor_data
                 req += b" HTTP/1.1\r\n"
-                req += b"Host: api.thingspeak.com\r\n"
-                req += b"Connection: close\r\n\r\n"
+                req += b"Host: api.thingspeak.com\r\n\r\n"
+                # req += b"Connection: close\r\n\r\n"
 
                 self.logger.info('Sending - {!r}'.format(req))
                 sock.sendall(req)
                 self.logger.info('Sending Completed')
-                # res = sock.recv(2048)
-                # self.logger.info('Received {!r}'.format(res))
+                res = sock.recv(2048)
+                self.logger.info('Received {!r}'.format(res))
             except Exception as e:
                 logger.critical(f'Sending Data to Thingspeak Failed. -> {e}')
             finally:
@@ -64,3 +64,18 @@ class Arduino():
                 sock.close()
         except Exception as e:
             logger.critical(f'Creating Socket Failed. -> {e}')
+
+    def upload_thingspeak_by_requests(self):
+        logger = self.logger
+        try:
+            self.logger.info(f'Sending Data to Thingspeak - {self.sensor_data.decode()}')
+            res = requests.get(f'http://api.thingspeak.com/update/?api_key={self.API_KEY}&{self.FIELD}={self.sensor_data.decode()}')
+            if res.status_code != 200:
+                raise SendingToThingsspeakFailed
+            self.logger.info(f'Sending Completed.')
+        except Exception as e:
+            self.logger.critical(f'Sending Failed -> {e}')
+            
+class SendingToThingsspeakFailed(Exception):
+    def __str__(self) -> str:
+        return 'Statue Code is Not Normal'
