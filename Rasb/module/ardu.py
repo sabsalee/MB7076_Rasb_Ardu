@@ -53,9 +53,9 @@ class Arduino():
                 # req += b"Connection: close\r\n\r\n"
 
                 self.logger.info('Sending - {!r}'.format(req))
-                sock.sendall(req)
+                sock.send(req)
                 self.logger.info('Sending Completed')
-                res = sock.recv(2048)
+                res = sock.recv(20)
                 self.logger.info('Received {!r}'.format(res))
             except Exception as e:
                 logger.critical(f'Sending Data to Thingspeak Failed. -> {e}')
