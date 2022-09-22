@@ -68,14 +68,14 @@ class Arduino():
     def upload_thingspeak_by_requests(self):
         logger = self.logger
         try:
-            self.logger.info(f'Sending Data to Thingspeak - {self.sensor_data.decode()}')
-            res = requests.get(f'http://api.thingspeak.com/update/?api_key={self.API_KEY}&{self.FIELD}={self.sensor_data.decode()}')
+            logger.info(f'Sending Data to Thingspeak.')
+            res = requests.get(f'http://api.thingspeak.com/update/?api_key={self.API_KEY.decode()}&{self.FIELD.decode()}={self.sensor_data.decode()}')
             if res.status_code != 200:
-                raise SendingToThingsspeakFailed
-            self.logger.info(f'Sending Completed.')
+                raise SendingToThingsspeakFailed(res.status_code)
+            logger.info(f'Sending Completed.')
         except Exception as e:
-            self.logger.critical(f'Sending Failed -> {e}')
+            logger.critical(f'Sending Failed -> {e}')
             
 class SendingToThingsspeakFailed(Exception):
-    def __str__(self) -> str:
-        return 'Statue Code is Not Normal'
+    def __str__(self, code) -> str:
+        return 'Not 200 received. errno is {}'
