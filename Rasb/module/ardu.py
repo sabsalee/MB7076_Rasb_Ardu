@@ -16,7 +16,19 @@ class Arduino():
 
         self.sensor_data: bytes = b'0'
         # self.port = serial.Serial('/dev/cu.usbmodem1401', 57600) # for DEV
-        self.port = serial.Serial("/dev/ttyACM0", 57600)
+        self.port = None
+    def control_serial_port(self, opt):
+        if opt == 'open':
+            try:
+                self.port = serial.Serial("/dev/ttyACM0", 57600)
+                self.logger.info('Serial port opened.')
+            except:
+                self.logger.critical('Failed to open Serial port.')
+        elif opt == 'close':    
+            try:
+                self.port.close()
+            except:
+                self.logger.critical('Failed to close Serial port.')
 
     def read_data(self):
         try:
@@ -55,7 +67,7 @@ class Arduino():
                 self.logger.info('Sending - {!r}'.format(req))
                 sock.send(req)
                 self.logger.info('Sending Completed')
-                res = sock.recv(20)
+                res = sock.recv(12)
                 self.logger.info('Received {!r}'.format(res))
             except Exception as e:
                 logger.critical(f'Sending Data to Thingspeak Failed. -> {e}')

@@ -1,6 +1,8 @@
 from logging.handlers import TimedRotatingFileHandler
 from module.ardu import *
+from datetime import datetime
 import logging, os
+
 
 def set_logger() -> logging.Logger:
     current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -42,10 +44,12 @@ def main():
     set_local_folder()
     ardu = Arduino(logger=logger)
     while True:
+        ardu.control_serial_port('open')
         ardu.read_data()
         # ardu.save_local()
         ardu.upload_thingspeak()
         # ardu.upload_thingspeak_by_requests()
+        ardu.control_serial_port('close')
 
 
 
