@@ -44,7 +44,7 @@ def main():
     while True:
         ardu.read_data()
         # ardu.save_local()
-        ardu.upload_thingspeak()
+        # ardu.upload_thingspeak()
         ardu.upload_thingspeak_by_requests()
 
 
