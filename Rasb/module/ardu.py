@@ -69,7 +69,7 @@ class Arduino():
         logger = self.logger
         try:
             logger.info(f'Sending Data to Thingspeak.')
-            res = requests.get(f'http://api.thingspeak.com/update/?api_key={self.API_KEY.decode()}&{self.FIELD.decode()}={self.sensor_data.decode()}')
+            res = requests.get(f'http://api.thingspeak.com/update?api_key={self.API_KEY.decode()}&{self.FIELD.decode()}={self.sensor_data.decode()}')
             if res.status_code != 200:
                 raise SendingToThingsspeakFailed(res.status_code)
             logger.info(f'Sending Completed.')
