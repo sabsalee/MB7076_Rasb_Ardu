@@ -2,7 +2,7 @@ from datetime import datetime
 import logging
 import serial
 import socket
-import requests
+# import requests
 
 class Arduino():
     def __init__(self, logger: logging.Logger) -> None:
@@ -13,6 +13,7 @@ class Arduino():
         self.API_KEY: bytes = b"CRKG5DCWA6WDXEXP"
         self.FIELD: bytes = b"field3"
         self.read_datetime = None
+        self.isUploadCompleted = True
 
         self.sensor_data: bytes = b'0'
         # self.port = serial.Serial('/dev/cu.usbmodem1401', 57600) # for DEV
@@ -44,11 +45,15 @@ class Arduino():
                 __write_data = f"{self.read_datetime.strftime('%Y-%m-%d %H:%M:%S')} {self.sensor_data.decode()}cm\n"
                 f.write(__write_data)
             self.logger.info('Data Saved in Local')
+            return 1
         except Exception as e:
             self.logger.critical(f'Writing Local Data Failed -> {e}')
+            return 0
 
     def upload_thingspeak(self):
         logger = self.logger
+        sensor_data = self.sensor_data
+        self.isUploadCompleted = False
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -59,7 +64,7 @@ class Arduino():
 
             try:
                 req = b'GET /update'
-                req += b"?api_key=" + self.API_KEY + b"&" + self.FIELD + b"=" + self.sensor_data
+                req += b"?api_key=" + self.API_KEY + b"&" + self.FIELD + b"=" + sensor_data
                 req += b" HTTP/1.1\r\n"
                 req += b"Host: api.thingspeak.com\r\n\r\n"
                 # req += b"Connection: close\r\n\r\n"
@@ -74,20 +79,21 @@ class Arduino():
             finally:
                 self.logger.info('Closing socket.')
                 sock.close()
+                self.isUploadCompleted = True
         except Exception as e:
             logger.critical(f'Creating Socket Failed. -> {e}')
 
-    def upload_thingspeak_by_requests(self):
-        logger = self.logger
-        try:
-            logger.info(f'Sending Data to Thingspeak.')
-            res = requests.get(f'http://api.thingspeak.com/update?api_key={self.API_KEY.decode()}&{self.FIELD.decode()}={self.sensor_data.decode()}')
-            if res.status_code != 200:
-                raise SendingToThingsspeakFailed(res.status_code)
-            logger.info(f'Sending Completed.')
-        except Exception as e:
-            logger.critical(f'Sending Failed -> {e}')
+    # def upload_thingspeak_by_requests(self):
+    #     logger = self.logger
+    #     try:
+    #         logger.info(f'Sending Data to Thingspeak.')
+    #         res = requests.get(f'http://api.thingspeak.com/update?api_key={self.API_KEY.decode()}&{self.FIELD.decode()}={self.sensor_data.decode()}')
+    #         if res.status_code != 200:
+    #             raise SendingToThingsspeakFailed(res.status_code)
+    #         logger.info(f'Sending Completed.')
+    #     except Exception as e:
+    #         logger.critical(f'Sending Failed -> {e}')
             
 class SendingToThingsspeakFailed(Exception):
     def __str__(self, code) -> str:
-        return 'Not 200 received. errno is {}'
+        return f'Not 200 received. errno is {code}'

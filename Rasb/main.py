@@ -1,6 +1,7 @@
 from logging.handlers import TimedRotatingFileHandler
 from module.ardu import *
 from datetime import datetime
+import multiprocessing as mp
 import logging, os
 
 
@@ -32,6 +33,7 @@ def set_logger() -> logging.Logger:
     logger.info('Logger Initialization Sequence Complete')
     return logger
 
+
 def set_local_folder():
     current_dir = os.path.dirname(os.path.realpath(__file__))
     data_dir = '{}/data'.format(current_dir)
@@ -39,16 +41,22 @@ def set_local_folder():
         os.makedirs(data_dir)
 
 
+
 def main():
     logger = set_logger()
     set_local_folder()
     ardu = Arduino(logger=logger)
+    p = mp.Pool(mp.cpu_count)
     while True:
         ardu.control_serial_port('open')
         ardu.read_data()
+        proc_save_local = p.apply_async(ardu.save_local)
+        if ardu.isUploadCompleted: # 만약에 시간까지 고려해야한다면 여기에 시간 조건을 더하면 될 것 같다.
+            proc_upload_ts = p.apply_async(ardu.upload_thingspeak)
+        logger.debug("Function <save_local> returns successful endcode") if proc_save_local.get() else logger.debug("Function <save_local> returns error endcode")
+        p.close()
         # ardu.save_local()
-        ardu.upload_thingspeak()
-        # ardu.upload_thingspeak_by_requests()
+        # ardu.upload_thingspeak()
         ardu.control_serial_port('close')
 
 
