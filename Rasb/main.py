@@ -63,7 +63,6 @@ def set_local_folder():
         os.makedirs(data_dir)
 
 
-
 def main():
     logger = set_logger()
     set_local_folder()
@@ -72,7 +71,7 @@ def main():
         ardu.control_serial_port('open')
         ardu.read_data()
         ardu.save_local()
-        if ardu.isUploadCompleted: # 만약에 시간까지 고려해야한다면 여기에 시간 조건을 더하면 될 것 같다.
+        if ardu.isUploadCompleteCheck(): # 만약에 시간까지 고려해야한다면 여기에 시간 조건을 더하면 될 것 같다.
             p = mp.Pool(mp.cpu_count())
             p.apply_async(ardu.upload_thingspeak)
             p.close()

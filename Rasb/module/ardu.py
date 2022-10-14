@@ -2,6 +2,7 @@ from datetime import datetime
 import logging
 import serial
 import socket
+import pickle
 # import requests
 
 class Arduino():
@@ -13,7 +14,6 @@ class Arduino():
         self.API_KEY: bytes = b"CRKG5DCWA6WDXEXP"
         self.FIELD: bytes = b"field3"
         self.read_datetime = None
-        self.isUploadCompleted = True
 
         self.sensor_data: bytes = b'0'
         # self.port = serial.Serial('/dev/cu.usbmodem1401', 57600) # for DEV
@@ -28,8 +28,8 @@ class Arduino():
         elif opt == 'close':    
             try:
                 self.port.close()
-            except:
                 self.logger.info('Serial port closed.\n')
+            except:
                 self.logger.critical('Failed to close Serial port.\n')
 
     def read_data(self):
@@ -51,8 +51,23 @@ class Arduino():
             self.logger.critical(f'Writing Local Data Failed -> {e}')
             return 0
 
+    def isUploadCompleteCheck(self):
+        try:
+            with open('status.pkl', 'rb') as f:
+                status = pickle.load(f)
+            return status
+        except:
+            with open('status.pkl', 'wb') as f:
+                pickle.dump(True, f)
+            return True
+
+            
+    def uploadCompletionStatusChange(self, status: bool):
+        with open('status.pkl', 'wb') as f:
+            pickle.dump(status, f)
+
     def upload_thingspeak(self):
-        self.isUploadCompleted = False
+        self.uploadCompletionStatusChange(False)
         logger = self.logger
         sensor_data = self.sensor_data
         try:
@@ -83,7 +98,7 @@ class Arduino():
         except Exception as e:
             logger.critical(f'Creating Socket Failed. -> {e}')
         finally:
-            self.isUploadCompleted = True
+            self.uploadCompletionStatusChange(True)
 
 
     # def upload_thingspeak_by_requests(self):
