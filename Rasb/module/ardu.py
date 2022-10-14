@@ -29,7 +29,8 @@ class Arduino():
             try:
                 self.port.close()
             except:
-                self.logger.critical('Failed to close Serial port.')
+                self.logger.info('Serial port closed.\n')
+                self.logger.critical('Failed to close Serial port.\n')
 
     def read_data(self):
         try:
@@ -51,9 +52,9 @@ class Arduino():
             return 0
 
     def upload_thingspeak(self):
+        self.isUploadCompleted = False
         logger = self.logger
         sensor_data = self.sensor_data
-        self.isUploadCompleted = False
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -79,9 +80,11 @@ class Arduino():
             finally:
                 self.logger.info('Closing socket.')
                 sock.close()
-                self.isUploadCompleted = True
         except Exception as e:
             logger.critical(f'Creating Socket Failed. -> {e}')
+        finally:
+            self.isUploadCompleted = True
+
 
     # def upload_thingspeak_by_requests(self):
     #     logger = self.logger

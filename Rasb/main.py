@@ -4,6 +4,28 @@ from datetime import datetime
 import multiprocessing as mp
 import logging, os
 
+class CustomFormatter(logging.Formatter):
+
+    grey = "\x1b[38;21m"
+    yellow = "\x1b[33;21m"
+    red = "\x1b[31;21m"
+    bold_red = "\x1b[31;1m"
+    reset = "\x1b[0m"
+    format_error = "%(asctime)s - [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)"
+    format = "%(asctime)s - [%(levelname)s] %(message)s"
+
+    FORMATS = {
+        logging.DEBUG: grey + format + reset,
+        logging.INFO: grey + format + reset,
+        logging.WARNING: yellow + format + reset,
+        logging.ERROR: red + format_error + reset,
+        logging.CRITICAL: bold_red + format_error + reset
+    }
+
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
 
 def set_logger() -> logging.Logger:
     current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -16,7 +38,7 @@ def set_logger() -> logging.Logger:
     formatter = logging.Formatter('%(asctime)s - [%(levelname)s] %(message)s')
     
     handler = logging.StreamHandler()
-    handler.setFormatter(formatter)
+    handler.setFormatter(CustomFormatter())
     handler.setLevel(logging.DEBUG)
     logger.addHandler(handler)
 
@@ -46,17 +68,14 @@ def main():
     logger = set_logger()
     set_local_folder()
     ardu = Arduino(logger=logger)
-    p = mp.Pool(mp.cpu_count)
     while True:
         ardu.control_serial_port('open')
         ardu.read_data()
-        proc_save_local = p.apply_async(ardu.save_local)
+        ardu.save_local()
         if ardu.isUploadCompleted: # 만약에 시간까지 고려해야한다면 여기에 시간 조건을 더하면 될 것 같다.
-            proc_upload_ts = p.apply_async(ardu.upload_thingspeak)
-        logger.debug("Function <save_local> returns successful endcode") if proc_save_local.get() else logger.debug("Function <save_local> returns error endcode")
-        p.close()
-        # ardu.save_local()
-        # ardu.upload_thingspeak()
+            p = mp.Pool(mp.cpu_count())
+            p.apply_async(ardu.upload_thingspeak)
+            p.close()
         ardu.control_serial_port('close')
 
 
