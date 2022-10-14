@@ -51,6 +51,11 @@ class Arduino():
             self.logger.critical(f'Writing Local Data Failed -> {e}')
             return 0
 
+
+    def initUploadCompletionStatus(self):
+        with open('status.pkl', 'wb') as f:
+            pickle.dump(True, f)
+    
     def isUploadCompleteCheck(self):
         try:
             with open('status.pkl', 'rb') as f:
@@ -60,7 +65,6 @@ class Arduino():
             with open('status.pkl', 'wb') as f:
                 pickle.dump(True, f)
             return True
-
             
     def uploadCompletionStatusChange(self, status: bool):
         with open('status.pkl', 'wb') as f:
@@ -83,7 +87,7 @@ class Arduino():
                 req += b"?api_key=" + self.API_KEY + b"&" + self.FIELD + b"=" + sensor_data
                 req += b" HTTP/1.1\r\n"
                 req += b"Host: api.thingspeak.com\r\n\r\n"
-                # req += b"Connection: close\r\n\r\n"
+                req += b"Connection: close\r\n\r\n"
 
                 self.logger.info('Sending - {!r}'.format(req))
                 sock.send(req)
