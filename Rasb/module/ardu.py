@@ -93,14 +93,14 @@ class Arduino():
                 sock.send(req)
                 self.logger.info('Sending Completed')
                 res = sock.recv(12)
-                self.logger.info('Received {!r}'.format(res))
+                self.logger.info('Received - {!r}'.format(res))
             except Exception as e:
                 logger.critical(f'Sending Data to Thingspeak Failed. -> {e}')
             finally:
                 self.logger.info('Closing socket.')
                 sock.close()
         except Exception as e:
-            logger.critical(f'Creating Socket Failed. -> {e}')
+            logger.critical(f'Creating Socket FAILED. -> {e}')
         finally:
             self.uploadCompletionStatusChange(True)
 

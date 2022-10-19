@@ -67,16 +67,30 @@ def main():
     logger = set_logger()
     set_local_folder()
     ardu = Arduino(logger=logger)
+    ardu.initUploadCompletionStatus()
+    reset_count = 0
     while True:
         ardu.control_serial_port('open')
         ardu.read_data()
         ardu.save_local()
+        reset_count += 1
         if ardu.isUploadCompleteCheck(): # 만약에 시간까지 고려해야한다면 여기에 시간 조건을 더하면 될 것 같다.
             p = mp.Pool(mp.cpu_count())
             p.apply_async(ardu.upload_thingspeak)
             p.close()
+            reset_count -= 1
         ardu.control_serial_port('close')
-
+        if reset_count > 120:
+            try:
+                p.terminate()
+                reset_count = 0
+                ardu.initUploadCompletionStatus()
+                logger.warning('upload procedure has been \'RESET\' due to module did not respond.')
+                # 여기서도 단순히 프로세스 종료가 아니라 (혹은 errcount따로 받아서) 1. 아두이노 리셋 / 센서 초기화, 2. CATM1 모듈 초기화
+            except:
+                logger.critical('Unexpected Error Ocurred!')
+                # Process Reset Code Required
+    # 파이썬 코드를 하나 더 만들어서 라즈베리파이 전체 재부팅 혹은 시스템 제어를 받는 건 어떨까 | 서버로 로그 보내주는것도 만들어보면 어떨까
 
 
 
