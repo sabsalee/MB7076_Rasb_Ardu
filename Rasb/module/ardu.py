@@ -33,9 +33,9 @@ class Arduino():
             print(f'Thingspeak field number: {field_num}')
             while True:
                 opt = input('Is correct? (Y/N) > ')
-                if opt.upper == 'Y':
+                if opt.upper() == 'Y':
                     break
-                elif opt.upper == 'N':
+                elif opt.upper() == 'N':
                     print('Please input new value. (If you enter a blank, the existing value is retained.)')
                     new_api_key = input('Thingspeak API key: ')
                     if not new_api_key == '':
