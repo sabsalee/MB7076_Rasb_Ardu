@@ -3,25 +3,98 @@ import logging
 import serial
 import socket
 import pickle
-# import requests
+from configparser import ConfigParser
 
 class Arduino():
     def __init__(self, logger: logging.Logger) -> None:
-
-        self.logger = logger
-        self.logger.info("Arduino Initialization Sequence Initiate")
         # DEFINE
-        self.API_KEY: bytes = b"CRKG5DCWA6WDXEXP"
-        self.FIELD: bytes = b"field3"
+        self.logger = logger
         self.read_datetime = None
-
         self.sensor_data: bytes = b'0'
-        # self.port = serial.Serial('/dev/cu.usbmodem1401', 57600) # for DEV
         self.port = None
+        self.port_num = 0
+
+    def init(self):
+        logger = self.logger
+        logger.info("Arduino Initialization Sequence Initiate")
+        # CHECK INFORMATION
+        setting = self.load_setting()
+        if setting['exist'] == 0:
+            print('=== Setting Required ===')
+            api_key = input('Thingspeak API key: ')
+            field_num = input('Thingspeak field number: ')
+            self.save_setting({'api_key':api_key, 'field_num':field_num})
+        else:
+            api_key = setting['api_key']
+            field_num = setting['field_num']
+            print('=== Current Setting ===')
+            print(f'Thingspeak API key: {api_key}')
+            print(f'Thingspeak field number: {field_num}')
+            while True:
+                opt = input('Is correct? (Y/N) > ')
+                if opt.upper == 'Y':
+                    break
+                elif opt.upper == 'N':
+                    print('Please input new value. (If you enter a blank, the existing value is retained.)')
+                    new_api_key = input('Thingspeak API key: ')
+                    if not new_api_key == '':
+                        api_key = new_api_key
+                    new_field_num = input('Thingspeak field number: ')
+                    if not new_field_num == '':
+                        field_num = new_field_num
+                    self.save_setting({'api_key':api_key, 'field_num':field_num})
+                    break
+                else:
+                    print('Answer must be Y or N. try again.')
+        self.API_KEY: bytes = bytes(api_key, encoding='utf8')
+        self.FIELD: bytes = b'field' + bytes(field_num, encoding='utf8')
+        # self.API_KEY: bytes = b"CRKG5DCWA6WDXEXP"
+        # self.FIELD: bytes = b"field3"
+
+
+        # FIND ARDUINO PORT
+        logger.debug('Try to find Serial Port - ttyACM0 to ttyACM3')
+        for i in range(4):
+            try:
+                self.port = serial.Serial(f"/dev/ttyACM{i}", 57600)
+                logger.debug(f'DETECTED - ttyACM{i}')
+                logger.info(f'Find Arduino in ttyACM{i}')
+                self.port_num = i
+                break
+            except:
+                logger.debug(f'UNDETECTED - ttyACM{i}')
+            finally:
+                if self.port == None:
+                    logger.critical('CRITICAL ERROR OCCUR - Can\'t found Arduino in Serial Port')
+                    raise Exception
+        
+
+
+    def load_setting(self):
+        conf = ConfigParser()
+        conf.read('conf.ini')
+        if conf == []:
+            self.logger.debug('Config File is not exist')
+            return {'exist':0}
+        api_key = conf['THINGSPEAK']['API_KEY']
+        field_num = conf['THINGSPEAK']['FIELD_NUM']
+        return {'exist':1, 'api_key':api_key, 'field_num':field_num}
+
+
+    def save_setting(self, newValue):
+        conf = ConfigParser()
+        conf['THINGSPEAK']['API_KEY'] = newValue['api_key']
+        conf['THINGSPEAK']['FIELD_NUM'] = newValue['field_num']
+        with open('conf.ini', 'w') as f:
+            conf.write(f)
+            self.logger.debug('Setting saved')
+
+
+
     def control_serial_port(self, opt):
         if opt == 'open':
             try:
-                self.port = serial.Serial("/dev/ttyACM0", 57600)
+                self.port = serial.Serial(f"/dev/ttyACM{self.port_num}", 57600)
                 self.logger.info('Serial port opened.')
             except:
                 self.logger.critical('Failed to open Serial port.')
