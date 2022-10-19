@@ -51,8 +51,6 @@ def set_logger() -> logging.Logger:
     file_handler.suffix = '%Y-%m-%d'
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
-
-    logger.info('Logger Initialization Sequence Complete')
     return logger
 
 

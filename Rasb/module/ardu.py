@@ -74,12 +74,13 @@ class Arduino():
     def load_setting(self):
         conf = ConfigParser()
         conf.read('conf.ini')
-        if conf == []:
+        try:
+            api_key = conf['THINGSPEAK']['API_KEY']
+            field_num = conf['THINGSPEAK']['FIELD_NUM']
+            return {'exist':1, 'api_key':api_key, 'field_num':field_num}
+        except:
             self.logger.debug('Config File is not exist')
             return {'exist':0}
-        api_key = conf['THINGSPEAK']['API_KEY']
-        field_num = conf['THINGSPEAK']['FIELD_NUM']
-        return {'exist':1, 'api_key':api_key, 'field_num':field_num}
 
 
     def save_setting(self, newValue):
