@@ -65,7 +65,7 @@ class Arduino():
             except:
                 logger.debug(f'UNDETECTED - ttyACM{i}')
             finally:
-                if self.port == None:
+                if i >= 3 and self.port == None:
                     logger.critical('CRITICAL ERROR OCCUR - Can\'t found Arduino in Serial Port')
                     raise Exception
         
@@ -85,6 +85,7 @@ class Arduino():
 
     def save_setting(self, newValue):
         conf = ConfigParser()
+        conf['THINGSPEAK'] = {}
         conf['THINGSPEAK']['API_KEY'] = newValue['api_key']
         conf['THINGSPEAK']['FIELD_NUM'] = newValue['field_num']
         with open('conf.ini', 'w') as f:
