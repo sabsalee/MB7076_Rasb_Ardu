@@ -13,6 +13,7 @@ class Arduino():
         self.sensor_data: bytes = b'0'
         self.port = None
         self.port_num = 0
+        self.init()
 
     def init(self):
         logger = self.logger
